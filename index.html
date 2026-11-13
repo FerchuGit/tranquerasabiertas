@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa Tranqueras Abiertas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: cabecera azul con logo, mapa a pantalla completa, panel inferior con ficha y tira de postas (lateral en pantallas anchas). */
+:root{
+  color-scheme: light;
+  --azul:#0b5cbf;        /* azul institucional del afiche */
+  --azul-hondo:#083c85;
+  --celeste:#e6f0fc;
+  --monte:#1f6b2a;       /* verde del predio */
+  --tinta:#12233b;
+  --tinta-suave:#55657c;
+  --papel:#ffffff;
+  --gris-mapa:#d9dbde;
+  --linea:#d5dfec;
+  --gps:#1a73e8;
+  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --texto:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--papel);color:var(--tinta);font-family:var(--texto);font-size:16px;line-height:1.35;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+button:focus-visible{outline:3px solid #ffb300;outline-offset:2px}
+[hidden]{display:none!important}
+
+.app{height:100%;display:flex;flex-direction:column;position:relative}
+
+/* Cabecera */
+.cab{background:linear-gradient(180deg,var(--azul),var(--azul-hondo));color:#fff;padding:9px 16px 10px;display:flex;align-items:center;gap:12px}
+.cab .txt{flex:1;min-width:0}
+.cab .fila{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cab .eyebrow{display:inline-block;font-family:var(--display);font-weight:700;letter-spacing:.14em;font-size:12px;background:rgba(255,255,255,.18);padding:1px 9px 2px;border-radius:5px}
+.cab .fecha{font-family:var(--display);font-weight:700;font-size:17px;line-height:1.05;white-space:nowrap}
+.cab h1{margin:4px 0 0;font-family:var(--display);font-weight:800;font-size:29px;line-height:.95;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+.cab .lugar{margin:4px 0 0;font-size:13.5px;font-weight:500;opacity:.95}
+.cab .logo{width:58px;height:58px;flex:none}
+
+/* Mapa */
+.cuerpo{flex:1;min-height:0;display:flex;flex-direction:column}
+.mapa{position:relative;flex:1;min-height:0;overflow:hidden;background:var(--gris-mapa);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.mapa.arrastra{cursor:grabbing}
+.lienzo{position:absolute;left:0;top:0;width:2400px;height:1697px;transform-origin:0 0;will-change:transform}
+.lienzo.vuela, .lienzo.vuela .pin, .lienzo.vuela .rotulo, .lienzo.vuela .yo{transition:transform .65s cubic-bezier(.22,.8,.25,1)}
+.lienzo img.base, .lienzo img.detalle{position:absolute;display:block;pointer-events:none;-webkit-user-drag:none}
+.lienzo img.base{left:0;top:0;width:100%;height:100%}
+.lienzo img.detalle{left:1181.5px;top:376.3px;width:732.1px;height:564.4px;opacity:0;transition:opacity .5s}
+.lienzo img.detalle.lista{opacity:1}
+
+.pin{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;transform:scale(var(--m,1));
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+.pin img{width:100%;height:100%;display:block;border-radius:50%;pointer-events:none}
+.pin .num{position:absolute;right:-5px;top:-6px;min-width:19px;height:19px;border-radius:10px;background:var(--tinta);color:#fff;border:1.5px solid #fff;
+  font-family:var(--display);font-weight:800;font-size:14px;line-height:16px;text-align:center}
+.pin::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:3px solid var(--azul);opacity:0;pointer-events:none}
+.pin.activo{z-index:3}
+.pin.activo .num{background:var(--azul)}
+.pin.activo::after{animation:onda 1.6s ease-out infinite}
+@keyframes onda{0%{transform:scale(1);opacity:.95}100%{transform:scale(2.1);opacity:0}}
+
+.rotulo{position:absolute;left:1508px;top:756px;transform-origin:0 50%;transform:translateY(-50%) scale(var(--m,1));pointer-events:none;
+  background:rgba(255,255,255,.92);color:var(--tinta);font-family:var(--display);font-weight:700;font-size:13px;line-height:1;padding:3px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+
+/* Mi ubicación */
+.yo{position:absolute;width:0;height:0;z-index:4;pointer-events:none;transform:scale(var(--m,1))}
+.yo .punto{position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;background:var(--gps);border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45)}
+.yo .punto::after{content:"";position:absolute;inset:-3px;border-radius:50%;background:var(--gps);opacity:.35;animation:late 2s ease-out infinite}
+@keyframes late{0%{transform:scale(1);opacity:.4}100%{transform:scale(3);opacity:0}}
+.precision{position:absolute;border-radius:50%;background:rgba(26,115,232,.14);border:1px solid rgba(26,115,232,.45);pointer-events:none;z-index:2}
+
+/* Controles */
+.zoom{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px;z-index:5}
+.zoom button{width:44px;height:44px;border-radius:10px;background:var(--papel);box-shadow:0 2px 8px rgba(18,35,59,.28);font-size:24px;font-weight:600;color:var(--azul-hondo);display:grid;place-items:center}
+.zoom button:active{background:var(--celeste)}
+.zoom svg{width:22px;height:22px}
+.zoom #gps{margin-top:8px}
+.zoom #gps[aria-pressed="true"]{background:var(--gps);color:#fff}
+.aviso{position:absolute;left:12px;right:68px;top:12px;z-index:5;background:var(--tinta);color:#fff;font-size:14px;padding:9px 12px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.3);max-width:420px}
+
+.info{position:absolute;left:12px;bottom:12px;z-index:5;display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:calc(100% - 24px)}
+.info button{display:flex;align-items:center;gap:6px;min-height:36px;padding:0 12px 0 9px;border-radius:999px;background:var(--papel);color:var(--azul-hondo);font-size:13.5px;font-weight:600;box-shadow:0 2px 8px rgba(18,35,59,.28)}
+.info button svg{width:18px;height:18px}
+.info-caja{background:var(--papel);border-radius:12px;padding:10px 14px;font-size:13.5px;box-shadow:0 2px 12px rgba(18,35,59,.3);max-width:300px}
+.info-caja p{margin:0}
+.info-caja .credito{margin-top:7px;padding-top:7px;border-top:1px solid var(--linea);color:var(--tinta-suave)}
+
+/* Hoja de información de la posta */
+.hoja{position:absolute;inset:0;z-index:20;background:rgba(18,35,59,.5);display:flex;align-items:flex-end;justify-content:center}
+.hoja-caja{position:relative;background:var(--papel);width:100%;max-width:560px;max-height:82%;border-radius:18px 18px 0 0;display:flex;flex-direction:column;box-shadow:0 -8px 30px rgba(0,0,0,.3);animation:sube .28s ease-out}
+@keyframes sube{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.hoja-x{position:absolute;right:10px;top:10px;width:44px;height:44px;border-radius:50%;background:var(--celeste);color:var(--azul-hondo);display:grid;place-items:center;z-index:1}
+.hoja-x svg{width:20px;height:20px}
+.hoja-cuerpo{overflow-y:auto;padding:18px 18px calc(22px + env(safe-area-inset-bottom,0px));-webkit-overflow-scrolling:touch}
+.hoja-cab{display:flex;align-items:center;gap:12px;padding-right:48px}
+.hoja-cab .icono{display:flex;flex:none}
+.hoja-cab .icono img{height:74px;width:auto;display:block}
+.hoja-cab .icono img + img{margin-left:-14px}
+.hoja-cab .sobre{font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--azul)}
+.hoja-cab h2{margin:2px 0 0;font-family:var(--display);font-weight:700;font-size:27px;line-height:1.02;text-wrap:balance}
+.hoja-cuerpo .intro{margin:14px 0 0;font-size:16px;max-width:65ch}
+.hoja-cuerpo dl{margin:14px 0 0;display:flex;flex-direction:column;gap:10px}
+.hoja-cuerpo dt{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.1;color:var(--monte);padding-left:10px;border-left:4px solid var(--monte)}
+.hoja-cuerpo dd{margin:3px 0 0 14px;font-size:15px;color:var(--tinta);max-width:62ch}
+.ficha .vermas{display:inline-block;margin:1px 0 3px;color:var(--azul);font-weight:600;font-size:14px;text-decoration:underline;text-underline-offset:2px;text-align:left}
+@media (min-width:860px){ .hoja{align-items:center} .hoja-caja{border-radius:18px} }
+@media (prefers-reduced-motion:reduce){ .hoja-caja{animation:none} }
+
+/* Panel */
+.panel{background:var(--papel);border-top:1px solid var(--linea);box-shadow:0 -6px 18px rgba(18,35,59,.12);z-index:6;padding-bottom:env(safe-area-inset-bottom,0)}
+.ficha{display:flex;align-items:center;gap:12px;padding:10px 16px 8px;min-height:96px}
+.ficha .icono{flex:none;display:flex;align-items:flex-end;gap:2px}
+.ficha .icono img{height:78px;width:auto;display:block}
+.ficha .icono img + img{margin-left:-14px}
+.ficha .icono img.guia{height:84px;margin-bottom:-8px}
+.ficha .datos{flex:1;min-width:0}
+.ficha .sobre{font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--azul)}
+.ficha h2{margin:1px 0 2px;font-family:var(--display);font-weight:700;font-size:23px;line-height:1.04;text-wrap:balance;overflow-wrap:anywhere}
+.ficha .temas{margin:0 0 2px;font-size:14px;font-weight:500}
+.ficha .nota{margin:0;font-size:13.5px;color:var(--tinta-suave)}
+.ficha .nota button{color:var(--azul);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.ficha .dist{color:var(--gps);font-weight:600}
+.pasos{display:flex;flex-direction:column;gap:6px;flex:none}
+.pasos button{width:44px;height:44px;border-radius:50%;background:var(--celeste);color:var(--azul-hondo);display:grid;place-items:center}
+.pasos button:active{background:#cfe1f8}
+.pasos svg{width:20px;height:20px}
+
+.tira{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 12px;scroll-padding:0 16px;scrollbar-width:none}
+.tira::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;align-items:center;gap:7px;padding:4px 13px 4px 4px;border-radius:999px;border:1.5px solid var(--linea);background:var(--papel);font-weight:600;font-size:14.5px;white-space:nowrap;min-height:44px}
+.chip img{width:34px;height:34px;border-radius:50%;flex:none}
+.chip b{font-family:var(--display);font-weight:800;font-size:18px;line-height:1}
+.chip[aria-pressed="true"]{background:var(--azul);border-color:var(--azul);color:#fff}
+
+@media (min-width:860px){
+  .cab{padding:14px 24px}
+  .cab h1{font-size:40px}
+  .cab .logo{width:74px;height:74px}
+  .cuerpo{flex-direction:row-reverse}
+  .panel{width:360px;flex:none;border-top:0;border-right:1px solid var(--linea);box-shadow:6px 0 18px rgba(18,35,59,.1);display:flex;flex-direction:column;min-height:0}
+  .ficha{padding:18px 20px 14px;border-bottom:1px solid var(--linea);min-height:130px}
+  .tira{flex-direction:column;overflow:auto;padding:14px 20px 20px;flex:1}
+  .chip{border-radius:14px;white-space:normal}
+}
+@media (max-width:360px){ .cab h1{font-size:25px} .ficha h2{font-size:21px} .ficha .icono img{height:66px} }
+@media (prefers-reduced-motion:reduce){
+  .lienzo.vuela, .lienzo.vuela .pin, .lienzo.vuela .rotulo, .lienzo.vuela .yo{transition:none}
+  .pin.activo::after{animation:none;opacity:.85;transform:scale(1.2)}
+  .yo .punto::after{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="cab">
+    <div class="txt">
+      <div class="fila">
+        <span class="eyebrow">JORNADA</span>
+        <span class="fecha">Jueves 19 de noviembre</span>
+      </div>
+      <h1>Tranqueras Abiertas</h1>
+      <p class="lugar">EEA Cerro Azul · Ruta Nac. 14, km 836</p>
+    </div>
+    <img class="logo" src="img/inta.png" alt="INTA" width="58" height="58">
+  </header>
+
+  <div class="cuerpo">
+    <main class="mapa" id="mapa" aria-label="Mapa del predio con las postas de la jornada">
+      <div class="lienzo" id="lienzo">
+        <img class="base" src="img/mapa.jpg" alt="Croquis de la EEA Cerro Azul" width="2400" height="1697" draggable="false">
+        <img class="detalle" id="detalle" alt="" draggable="false">
+        <span class="rotulo">Edificio Central</span>
+      </div>
+      <div class="aviso" id="aviso" role="status" hidden></div>
+      <div class="info">
+        <div class="info-caja" id="infoCaja" hidden>
+          <p><strong>Jornada Tranqueras Abiertas</strong><br>EEA Cerro Azul · Ruta Nac. 14, km 836<br>Jueves 19 de noviembre</p>
+          <p class="credito">Desarrollado por Fernando Alvarenga – INTA Cerro Azul</p>
+        </div>
+        <button type="button" id="infoBtn" aria-expanded="false" aria-controls="infoCaja">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/></svg>
+          Más info
+        </button>
+      </div>
+      <div class="zoom">
+        <button type="button" id="mas" aria-label="Acercar">+</button>
+        <button type="button" id="menos" aria-label="Alejar">−</button>
+        <button type="button" id="todo" aria-label="Ver todo el predio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+        <button type="button" id="gps" aria-label="Mostrar mi ubicación" aria-pressed="false" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22"/></svg>
+        </button>
+      </div>
+    </main>
+
+    <section class="panel" aria-label="Postas">
+      <div class="ficha" id="ficha" aria-live="polite"></div>
+      <div class="tira" id="tira"></div>
+    </section>
+  </div>
+
+  <div class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hojaTitulo" hidden>
+    <div class="hoja-caja">
+      <button type="button" class="hoja-x" id="hojaCerrar" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="hoja-cuerpo" id="hojaCuerpo"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Georreferencia del croquis (para "Mi ubicación") ----------
+   Completar UNA de las dos formas y el botón de ubicación aparece solo:
+   a) Extensión de la imagen completa (si el croquis respeta una exportación georreferenciada, norte arriba):
+        window.MAPA_GEO = { extent: { oeste:-55.xxxx, sur:-27.xxxx, este:-55.xxxx, norte:-27.xxxx } };
+   b) Tres o más puntos de control (lat, lon reales; x, y en píxeles de img/mapa.jpg, 2400 x 1697):
+        window.MAPA_GEO = { puntos: [ {lat:-27.x, lon:-55.x, x:0, y:0}, ... ] };
+*/
+// Ajuste hecho con los 18 vértices del perímetro (puntos_perimetroEEA.kml)
+window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.4651608, "x": 0, "y": 0}, {"lat": -27.6446494, "lon": -55.421059, "x": 2400, "y": 0}, {"lat": -27.6723587, "lon": -55.4634796, "x": 0, "y": 1697}] };
+</script>
+<script>
+(function(){
+  var W=2400,H=1697;
+  // Coordenadas en píxeles del croquis (img/mapa.jpg), proyectadas desde ubicacion_georeferenciadas_postas.kml
+  var puntos=[
+    {id:'1',n:'1',nombre:'Sistema silvopastoril',corto:'Silvopastoril',area:'Producción animal',x:1645,y:588,ico:['silvo']},
+    {id:'2',n:'2',nombre:'Jardín de Introducción de especies',corto:'Jardín de especies',area:'Producción animal',x:1601,y:678,ico:['jardin']},
+    {id:'3',n:'3',nombre:'Calicata de suelo rojo profundo',corto:'Calicata',area:'Recursos naturales',x:1599,y:590,ico:['calicata']},
+    {id:'4',n:'4',nombre:'Yerba Mate y Té',temas:['Mejoramiento genético','Producción','AgTech','Mecanización'],
+      desc:'Se presentan aspectos de dos cultivos tradicionales de la región, desde su producción y manejo hasta las posibilidades de innovación tecnológica.',
+      detalle:[
+        ['Mejoramiento genético','Busca seleccionar y desarrollar materiales vegetales con características de interés productivo y adaptación al ambiente.'],
+        ['Producción','Incluye prácticas de implantación, conducción, nutrición y cuidado de los cultivos.'],
+        ['AgTech','Incorpora herramientas digitales, sensores, drones y análisis de datos para observar variaciones del cultivo y apoyar la toma de decisiones.'],
+        ['Mecanización','Presenta el uso de equipos y tecnologías que facilitan distintas labores y pueden mejorar la eficiencia operativa.']
+      ],x:1569,y:591,ico:['yerba','te']},
+    {id:'5',n:'5',nombre:'Invernáculos',temas:['Frutales','Aromáticas'],x:1477,y:681,ico:['invernaculos']},
+    {id:'6',n:'6',nombre:'Estación Agrometeorológica',corto:'Agrometeorología',temas:['Equipos convencionales automáticos'],x:1445,y:711,ico:['agromet']},
+    {id:'7',n:'7',nombre:'Extensión',x:1435,y:742,ico:['extension']},
+    {id:'8',n:'8',nombre:'Cultivos Anuales',temas:['Maíz','Soja'],x:1369,y:733,ico:['cultivos']},
+    {id:'9',n:'9',nombre:'Laboratorio de Suelos',corto:'Lab. de Suelos',area:'Recursos naturales',temas:['Análisis de suelo','Sustratos'],x:1453,y:755,ico:['lab','sustrato']},
+    {id:'wc-a',wc:true,nombre:'Sanitarios',corto:'Sanitarios (posta 4)',ref:'Cerca de la posta 4, Yerba Mate y Té.',x:1528,y:604,ico:['wc']},
+    {id:'wc-b',wc:true,nombre:'Sanitarios',corto:'Sanitarios (Edif. Central)',ref:'Junto al Edificio Central, cerca de las postas 7 y 9.',x:1432,y:772,ico:['wc']}
+  ];
+  var postas=puntos.filter(function(p){return !p.wc});
+  var banos=puntos.filter(function(p){return p.wc});
+
+  var mapa=document.getElementById('mapa'), lienzo=document.getElementById('lienzo'),
+      ficha=document.getElementById('ficha'), tira=document.getElementById('tira'), aviso=document.getElementById('aviso');
+  var k=1,tx=0,ty=0,kMin=.1,kMax=4,activo=null;
+
+  function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+  function img(src,cls){var i=el('img',cls);i.src=src;i.alt='';i.draggable=false;return i}
+
+  // Capa de detalle (zona de actividades en alta resolución): se carga después del mapa base
+  var det=document.getElementById('detalle');
+  det.addEventListener('load',function(){det.classList.add('lista')});
+  setTimeout(function(){det.src='img/detalle.jpg'},300);
+
+  // Marcadores y chips
+  puntos.forEach(function(p){
+    var b=el('button','pin'+(p.wc?' wc':''));
+    b.type='button';b.style.left=p.x+'px';b.style.top=p.y+'px';
+    b.setAttribute('aria-label',(p.wc?p.corto:'Posta '+p.n+': '+p.nombre));
+    b.appendChild(img('img/c_'+p.ico[0]+'.png'));
+    if(!p.wc) b.appendChild(el('span','num',p.n));
+    b.addEventListener('click',function(){ if(!movido) elegir(p.id) });
+    lienzo.appendChild(b);p.pin=b;
+
+    var c=el('button','chip');c.type='button';c.setAttribute('aria-pressed','false');
+    c.appendChild(img('img/c_'+p.ico[0]+'.png'));
+    if(!p.wc) c.appendChild(el('b','',p.n));
+    c.appendChild(el('span','',p.corto||p.nombre));
+    c.addEventListener('click',function(){elegir(p.id)});
+    tira.appendChild(c);p.chip=c;
+  });
+
+  function tam(){var r=mapa.getBoundingClientRect();return {w:r.width,h:r.height,l:r.left,t:r.top}}
+  function limitar(){
+    var s=tam();
+    kMin=Math.min(s.w/W,s.h/H);
+    k=Math.max(kMin,Math.min(kMax,k));
+    var mw=W*k,mh=H*k;
+    tx = mw<=s.w ? (s.w-mw)/2 : Math.min(0,Math.max(s.w-mw,tx));
+    ty = mh<=s.h ? (s.h-mh)/2 : Math.min(0,Math.max(s.h-mh,ty));
+  }
+  function pintar(animado){
+    limitar();
+    lienzo.classList.toggle('vuela',!!animado);
+    lienzo.style.transform='translate('+tx+'px,'+ty+'px) scale('+k+')';
+    // los marcadores se ven siempre entre 34 y 46 px en pantalla
+    var m=Math.min(Math.max(44*k,34),46)/(44*k);
+    lienzo.style.setProperty('--m',m.toFixed(3));
+  }
+  function volar(x,y,kk){var s=tam();k=kk;limitar();tx=s.w/2-x*k;ty=s.h/2-y*k;pintar(true)}
+  function encuadrar(lista,margen,tope){
+    var s=tam(),xs=lista.map(function(p){return p.x}),ys=lista.map(function(p){return p.y});
+    var x0=Math.min.apply(0,xs)-margen,x1=Math.max.apply(0,xs)+margen,y0=Math.min.apply(0,ys)-margen,y1=Math.max.apply(0,ys)+margen;
+    var libre=s.w>500?0:60; // en el teléfono, deja libre la columna de botones
+    volar((x0+x1)/2,(y0+y1)/2,Math.min(tope||kMax,(s.w-libre)/(x1-x0),s.h/(y1-y0)));
+    tx-=libre/2;pintar(true);
+  }
+  function zoomEn(px,py,factor,animado){
+    var k0=k;k=Math.max(kMin,Math.min(kMax,k*factor));
+    tx=px-(px-tx)*(k/k0);ty=py-(py-ty)*(k/k0);pintar(animado);
+  }
+  function masCercano(p,lista){
+    return lista.slice().sort(function(a,b){return Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y)})[0];
+  }
+  function flecha(d){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="'+d+'"/></svg>'}
+  var tAviso;
+  function avisar(txt,ms){aviso.textContent=txt;aviso.hidden=false;clearTimeout(tAviso);tAviso=setTimeout(function(){aviso.hidden=true},ms||5000)}
+
+  function mostrarFicha(p){
+    ficha.textContent='';
+    var ic=el('div','icono'),d=el('div','datos');
+    if(!p){
+      ic.appendChild(img('img/guia.png','guia'));
+      d.appendChild(el('div','sobre','9 postas para recorrer'));
+      d.appendChild(el('h2','','¿A dónde querés ir?'));
+      d.appendChild(el('p','nota','Tocá una posta en el mapa o elegila de la lista.'));
+      ficha.appendChild(ic);ficha.appendChild(d);
+      var pa=el('div','pasos'),ini=el('button');ini.type='button';ini.setAttribute('aria-label','Empezar por la posta 1');ini.innerHTML=flecha('M9 5l7 7-7 7');
+      ini.addEventListener('click',function(){elegir('1')});pa.appendChild(ini);ficha.appendChild(pa);
+      return;
+    }
+    p.ico.forEach(function(n){ic.appendChild(img('img/p_'+n+'.png'))});
+    d.appendChild(el('div','sobre',p.wc?'Servicios':'Posta '+p.n+' de '+postas.length+(p.area?' · '+p.area:'')));
+    d.appendChild(el('h2','',p.nombre));
+    if(p.temas) d.appendChild(el('p','temas',p.temas.join(' · ')));
+    if(p.desc){
+      var vm=el('button','vermas','Ver información de la posta');vm.type='button';
+      vm.addEventListener('click',function(){abrirHoja(p)});d.appendChild(vm);
+    }
+    var nota=el('p','nota');
+    if(p.wc) nota.textContent=p.ref;
+    else{
+      var w=masCercano(p,banos),lk=el('button','',w.id==='wc-a'?'cerca de la posta 4':'Edificio Central');
+      nota.appendChild(document.createTextNode('Sanitarios más cerca: '));
+      lk.type='button';lk.addEventListener('click',function(){elegir(w.id)});nota.appendChild(lk);
+    }
+    d.appendChild(nota);
+    d.appendChild(el('p','nota dist'));
+    ficha.appendChild(ic);ficha.appendChild(d);
+    var pasos=el('div','pasos');
+    [['Siguiente','M9 5l7 7-7 7',1],['Anterior','M15 5l-7 7 7 7',-1]].forEach(function(c){
+      var b=el('button');b.type='button';b.setAttribute('aria-label',c[0]+' posta');b.innerHTML=flecha(c[1]);
+      b.addEventListener('click',function(){
+        var i=postas.indexOf(p);
+        if(i<0) i=c[2]>0?-1:0;
+        elegir(postas[(i+c[2]+postas.length)%postas.length].id);
+      });
+      pasos.appendChild(b);
+    });
+    ficha.appendChild(pasos);
+    pintarDistancia();
+  }
+
+  // Hoja con la información completa de una posta
+  var hoja=document.getElementById('hoja'),hojaCuerpo=document.getElementById('hojaCuerpo'),vuelveA=null;
+  function abrirHoja(p){
+    hojaCuerpo.textContent='';
+    var cab=el('div','hoja-cab'),ic=el('div','icono'),t=el('div','');
+    p.ico.forEach(function(n){ic.appendChild(img('img/p_'+n+'.png'))});
+    t.appendChild(el('div','sobre','Posta '+p.n+(p.area?' · '+p.area:'')));
+    var h=el('h2','',p.nombre);h.id='hojaTitulo';t.appendChild(h);
+    cab.appendChild(ic);cab.appendChild(t);hojaCuerpo.appendChild(cab);
+    hojaCuerpo.appendChild(el('p','intro',p.desc));
+    if(p.detalle){
+      var dl=el('dl','');
+      p.detalle.forEach(function(x){dl.appendChild(el('dt','',x[0]));dl.appendChild(el('dd','',x[1]))});
+      hojaCuerpo.appendChild(dl);
+    }
+    vuelveA=document.activeElement;hoja.hidden=false;hojaCuerpo.scrollTop=0;
+    document.getElementById('hojaCerrar').focus();
+  }
+  function cerrarHoja(){ if(hoja.hidden)return; hoja.hidden=true; if(vuelveA&&vuelveA.focus) vuelveA.focus(); }
+  document.getElementById('hojaCerrar').addEventListener('click',cerrarHoja);
+  hoja.addEventListener('click',function(e){ if(e.target===hoja) cerrarHoja() });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') cerrarHoja() });
+
+  function elegir(id){
+    var p=puntos.filter(function(q){return q.id===id})[0]||null;
+    activo=p;
+    puntos.forEach(function(q){
+      q.pin.classList.toggle('activo',q===p);
+      q.chip.setAttribute('aria-pressed',q===p?'true':'false');
+    });
+    mostrarFicha(p);
+    if(p){
+      volar(p.x,p.y,Math.max(k,Math.min(kMax,2.2)));
+      var motion=window.matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth';
+      try{p.chip.scrollIntoView({behavior:motion,inline:'center',block:'nearest'})}catch(e){}
+    }
+  }
+
+  // ---------- Mi ubicación (GPS) ----------
+  var geo=null,yo=null,halo=null,pos=null,vigia=null,primera=true;
+  function resolver3(A,b){ // Cramer 3x3
+    function det(m){return m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0])}
+    var D=det(A);if(Math.abs(D)<1e-18)return null;
+    return [0,1,2].map(function(c){var M=A.map(function(r,i){var q=r.slice();q[c]=b[i];return q});return det(M)/D});
+  }
+  function armarGeo(cfg){
+    if(!cfg)return null;
+    var pts=cfg.puntos;
+    if(cfg.extent){var e=cfg.extent;pts=[{lat:e.norte,lon:e.oeste,x:0,y:0},{lat:e.norte,lon:e.este,x:W,y:0},{lat:e.sur,lon:e.oeste,x:0,y:H},{lat:e.sur,lon:e.este,x:W,y:H}]}
+    if(!pts||pts.length<3)return null;
+    var la0=0,lo0=0;pts.forEach(function(p){la0+=p.lat/pts.length;lo0+=p.lon/pts.length});
+    var kx=111320*Math.cos(la0*Math.PI/180),ky=110574; // metros por grado
+    var A=[[0,0,0],[0,0,0],[0,0,0]],bx=[0,0,0],by=[0,0,0];
+    pts.forEach(function(p){
+      var v=[(p.lon-lo0)*kx,(p.lat-la0)*ky,1];
+      for(var i=0;i<3;i++){for(var j=0;j<3;j++)A[i][j]+=v[i]*v[j];bx[i]+=v[i]*p.x;by[i]+=v[i]*p.y}
+    });
+    var cx=resolver3(A,bx),cy=resolver3(A,by);if(!cx||!cy)return null;
+    return {
+      aPx:function(lat,lon){var e=(lon-lo0)*kx,n=(lat-la0)*ky;return {x:cx[0]*e+cx[1]*n+cx[2],y:cy[0]*e+cy[1]*n+cy[2]}},
+      pxPorMetro:(Math.hypot(cx[0],cy[0])+Math.hypot(cx[1],cy[1]))/2
+    };
+  }
+  function pintarDistancia(){
+    var d=ficha.querySelector('.dist');if(!d)return;
+    if(!pos||!activo||!geo){d.textContent='';return}
+    var m=Math.hypot(pos.x-activo.x,pos.y-activo.y)/geo.pxPorMetro;
+    d.textContent=m<15?'Estás acá.':'Estás a unos '+(m<1000?Math.round(m/10)*10+' m':(m/1000).toFixed(1).replace('.',',')+' km')+'.';
+  }
+  function alUbicar(g){
+    var p=geo.aPx(g.coords.latitude,g.coords.longitude);
+    var dentro=p.x>=0&&p.y>=0&&p.x<=W&&p.y<=H;
+    if(!dentro){
+      pos=null;if(yo){yo.hidden=true;halo.hidden=true}
+      if(primera) avisar('Tu ubicación queda fuera del mapa. Cuando llegues a la EEA vas a verte como un punto azul.',7000);
+      primera=false;pintarDistancia();return;
+    }
+    if(!yo){
+      halo=el('div','precision');lienzo.appendChild(halo);
+      yo=el('div','yo');yo.appendChild(el('div','punto'));lienzo.appendChild(yo);
+    }
+    yo.hidden=false;halo.hidden=false;pos=p;
+    yo.style.left=p.x+'px';yo.style.top=p.y+'px';
+    var r=Math.min(400,Math.max(0,(g.coords.accuracy||0)*geo.pxPorMetro));
+    halo.style.left=(p.x-r)+'px';halo.style.top=(p.y-r)+'px';halo.style.width=halo.style.height=2*r+'px';
+    if(primera){primera=false;volar(p.x,p.y,Math.max(k,1.2))}
+    pintarDistancia();
+  }
+  function alFallar(e){
+    detener();
+    avisar(e&&e.code===1?'No hay permiso de ubicación. Activalo para este sitio en el navegador y volvé a tocar el botón.'
+      :'No se pudo obtener tu ubicación. Revisá que el GPS del teléfono esté encendido.',7000);
+  }
+  function detener(){
+    if(vigia!=null){navigator.geolocation.clearWatch(vigia);vigia=null}
+    botonGps.setAttribute('aria-pressed','false');pos=null;
+    if(yo){yo.hidden=true;halo.hidden=true}
+    pintarDistancia();
+  }
+  var botonGps=document.getElementById('gps');
+  geo=armarGeo(window.MAPA_GEO);
+  if(geo&&navigator.geolocation){
+    botonGps.hidden=false;
+    botonGps.addEventListener('click',function(){
+      if(vigia!=null){ if(pos) volar(pos.x,pos.y,Math.max(k,1.2)); else detener(); return }
+      primera=true;botonGps.setAttribute('aria-pressed','true');
+      try{vigia=navigator.geolocation.watchPosition(alUbicar,alFallar,{enableHighAccuracy:true,maximumAge:5000,timeout:20000})}
+      catch(e){alFallar()}
+    });
+  }
+
+  // ---------- Arrastre, pellizco, rueda y doble toque ----------
+  var dedos={},movido=false,ini=null,ultimoToque=0;
+  function lista(){return Object.keys(dedos).map(function(i){return dedos[i]})}
+  mapa.addEventListener('pointerdown',function(e){
+    if(e.target.closest('.zoom')||e.target.closest('.info'))return;
+    dedos[e.pointerId]={x:e.clientX,y:e.clientY};movido=false;prep();
+    lienzo.classList.remove('vuela');
+  });
+  function prep(){
+    var d=lista(),s=tam();
+    if(d.length===1) ini={x:d[0].x,y:d[0].y,tx:tx,ty:ty};
+    else if(d.length>=2){
+      ini={dist:Math.hypot(d[0].x-d[1].x,d[0].y-d[1].y),k:k,tx:tx,ty:ty,cx:(d[0].x+d[1].x)/2-s.l,cy:(d[0].y+d[1].y)/2-s.t};
+    }
+  }
+  window.addEventListener('pointermove',function(e){
+    if(!dedos[e.pointerId])return;
+    dedos[e.pointerId]={x:e.clientX,y:e.clientY};
+    var d=lista(),s=tam();
+    if(d.length===1&&ini&&ini.dist==null){
+      var dx=d[0].x-ini.x,dy=d[0].y-ini.y;
+      if(!movido&&Math.hypot(dx,dy)<7)return;
+      movido=true;mapa.classList.add('arrastra');
+      tx=ini.tx+dx;ty=ini.ty+dy;pintar(false);
+    }else if(d.length>=2&&ini&&ini.dist){
+      movido=true;
+      var dist=Math.hypot(d[0].x-d[1].x,d[0].y-d[1].y),cx=(d[0].x+d[1].x)/2-s.l,cy=(d[0].y+d[1].y)/2-s.t;
+      var nk=Math.max(kMin,Math.min(kMax,ini.k*dist/ini.dist));
+      tx=cx-(ini.cx-ini.tx)*(nk/ini.k);ty=cy-(ini.cy-ini.ty)*(nk/ini.k);k=nk;pintar(false);
+    }
+  });
+  function soltar(e){
+    if(!dedos[e.pointerId])return;
+    delete dedos[e.pointerId];mapa.classList.remove('arrastra');
+    if(lista().length){prep();return}
+    if(!movido&&e.type==='pointerup'&&!e.target.closest('.pin')){
+      var t=Date.now(),s=tam();
+      if(t-ultimoToque<320){zoomEn(e.clientX-s.l,e.clientY-s.t,1.8,true);ultimoToque=0}else ultimoToque=t;
+    }
+    setTimeout(function(){movido=false},0);
+  }
+  window.addEventListener('pointerup',soltar);window.addEventListener('pointercancel',soltar);
+  mapa.addEventListener('wheel',function(e){
+    e.preventDefault();var s=tam();lienzo.classList.remove('vuela');
+    zoomEn(e.clientX-s.l,e.clientY-s.t,Math.exp(-e.deltaY*0.0016),false);
+  },{passive:false});
+
+  var infoBtn=document.getElementById('infoBtn'),infoCaja=document.getElementById('infoCaja');
+  infoBtn.addEventListener('click',function(){
+    var abre=infoCaja.hidden;infoCaja.hidden=!abre;infoBtn.setAttribute('aria-expanded',abre?'true':'false');
+  });
+
+  function centro(f){var s=tam();zoomEn(s.w/2,s.h/2,f,true)}
+  document.getElementById('mas').addEventListener('click',function(){centro(1.5)});
+  document.getElementById('menos').addEventListener('click',function(){centro(1/1.5)});
+  document.getElementById('todo').addEventListener('click',function(){elegir(null);k=kMin;tx=0;ty=0;pintar(true)});
+
+  // Estado inicial: la zona de actividades encuadrada
+  mostrarFicha(null);
+  function inicio(){ encuadrar(puntos,60,1.6); lienzo.classList.remove('vuela'); }
+  inicio();
+  var antes=tam();
+  window.addEventListener('resize',function(){
+    var s=tam();
+    if(Math.abs(s.w-antes.w)>40||Math.abs(s.h-antes.h)>120){ if(activo) volar(activo.x,activo.y,k); else inicio(); }
+    else pintar(false);
+    antes=s;
+  });
+})();
+</script>
+</body>
+</html>

@@ -30,6 +30,9 @@ body{background:var(--papel);color:var(--tinta);font-family:var(--texto);font-si
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
 button:focus-visible{outline:3px solid #ffb300;outline-offset:2px}
 [hidden]{display:none!important}
+/* Disuade guardar las imágenes: sin menú de pulsación larga ni arrastre */
+img{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+body{-webkit-touch-callout:none}
 
 .app{height:100%;display:flex;flex-direction:column;position:relative}
 
@@ -230,6 +233,8 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
 <script>
 (function(){
   var W=2400,H=1697;
+  document.addEventListener('contextmenu',function(e){e.preventDefault()});
+  document.addEventListener('dragstart',function(e){e.preventDefault()});
   // Coordenadas en píxeles del croquis (img/mapa.jpg), proyectadas desde ubicacion_georeferenciadas_postas.kml
   var puntos=[
     {id:'1',n:'1',nombre:'Sistema silvopastoril',corto:'Silvopastoril',area:'Producción animal',x:1645,y:588,ico:['silvo']},

@@ -111,6 +111,12 @@ body{-webkit-touch-callout:none}
 .hoja-cuerpo dl{margin:14px 0 0;display:flex;flex-direction:column;gap:10px}
 .hoja-cuerpo dt{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.1;color:var(--monte);padding-left:10px;border-left:4px solid var(--monte)}
 .hoja-cuerpo dd{margin:3px 0 0 14px;font-size:15px;color:var(--tinta);max-width:62ch}
+.hoja-cuerpo .video{display:flex;align-items:center;gap:10px;margin:16px 0 0;padding:10px 14px;min-height:48px;border-radius:12px;background:#fdecec;color:#a3161b;font-weight:600;text-decoration:none;width:fit-content}
+.hoja-cuerpo .video svg{width:28px;height:28px;color:#e02424;flex:none}
+.hoja-cuerpo .orienta{margin:18px 0 0;font-size:12.5px;color:var(--tinta-suave);max-width:62ch}
+.hoja-nav{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--linea)}
+.hoja-nav button{min-height:44px;padding:0 16px;border-radius:999px;background:var(--celeste);color:var(--azul-hondo);font-weight:600;font-size:15px}
+.hoja-nav button:active{background:#cfe1f8}
 .ficha .vermas{display:inline-block;margin:1px 0 3px;color:var(--azul);font-weight:600;font-size:14px;text-decoration:underline;text-underline-offset:2px;text-align:left}
 @media (min-width:860px){ .hoja{align-items:center} .hoja-caja{border-radius:18px} }
 @media (prefers-reduced-motion:reduce){ .hoja-caja{animation:none} }
@@ -237,23 +243,32 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
   document.addEventListener('dragstart',function(e){e.preventDefault()});
   // Coordenadas en píxeles del croquis (img/mapa.jpg), proyectadas desde ubicacion_georeferenciadas_postas.kml
   var puntos=[
-    {id:'1',n:'1',nombre:'Sistema silvopastoril',corto:'Silvopastoril',area:'Producción animal',x:1645,y:588,ico:['silvo']},
-    {id:'2',n:'2',nombre:'Jardín de Introducción de especies',corto:'Jardín de especies',area:'Producción animal',x:1601,y:678,ico:['jardin']},
-    {id:'3',n:'3',nombre:'Calicata de suelo rojo profundo',corto:'Calicata',area:'Recursos naturales',x:1599,y:590,ico:['calicata']},
-    {id:'4',n:'4',nombre:'Yerba Mate y Té',temas:['Mejoramiento genético','Producción','AgTech','Mecanización'],
-      desc:'Se presentan aspectos de dos cultivos tradicionales de la región, desde su producción y manejo hasta las posibilidades de innovación tecnológica.',
+    // Textos: POSTAS_TRANQUERAS_ABIERTAS_DESCRIPCIONES.docx
+    {id:'1',n:'1',nombre:'Sistema silvopastoril',corto:'Silvopastoril',area:'Producción animal',x:1645,y:588,ico:['silvo'],
+      desc:'Los sistemas silvopastoriles integran árboles, pasturas y animales en una misma superficie. Durante la visita se abordará cómo esta combinación puede favorecer el bienestar animal, aportar sombra, mejorar el aprovechamiento del espacio y contribuir al cuidado del suelo.'},
+    {id:'2',n:'2',nombre:'Jardín de introducción de especies',corto:'Jardín de especies',area:'Producción animal',x:1601,y:678,ico:['jardin'],
+      desc:'Este espacio permite conocer diferentes especies forrajeras y evaluar su adaptación a las condiciones de la región. Se explicará la importancia de la selección de pasturas para la alimentación animal y el manejo de los sistemas productivos.'},
+    {id:'3',n:'3',nombre:'Calicata de suelo rojo profundo',corto:'Calicata',area:'Recursos naturales',x:1599,y:590,ico:['calicata'],
+      desc:'A través de una excavación en el suelo se observarán sus horizontes, color, estructura y profundidad. La calicata permite interpretar características que influyen en la infiltración del agua, el crecimiento de las raíces y las decisiones de manejo y conservación del recurso.',
+      video:'https://www.youtube.com/watch?v=iE8RTGiqDEE&t=68s'},
+    {id:'4',n:'4',nombre:'Yerba mate y té',temas:['Mejoramiento genético','Producción y mecanización','AgTech'],x:1569,y:591,ico:['yerba','te'],
+      desc:'Se presentarán líneas de trabajo vinculadas con dos cultivos representativos de la región, desde el mejoramiento genético y el manejo productivo hasta la incorporación de maquinaria y tecnologías digitales.',
       detalle:[
-        ['Mejoramiento genético','Busca seleccionar y desarrollar materiales vegetales con características de interés productivo y adaptación al ambiente.'],
-        ['Producción','Incluye prácticas de implantación, conducción, nutrición y cuidado de los cultivos.'],
-        ['AgTech','Incorpora herramientas digitales, sensores, drones y análisis de datos para observar variaciones del cultivo y apoyar la toma de decisiones.'],
-        ['Mecanización','Presenta el uso de equipos y tecnologías que facilitan distintas labores y pueden mejorar la eficiencia operativa.']
-      ],x:1569,y:591,ico:['yerba','te']},
-    {id:'5',n:'5',nombre:'Invernáculos',temas:['Frutales','Aromáticas'],x:1477,y:681,ico:['invernaculos']},
-    {id:'6',n:'6',nombre:'Estación Agrometeorológica',corto:'Agrometeorología',temas:['Equipos convencionales automáticos'],x:1445,y:711,ico:['agromet']},
-    {id:'7',n:'7',nombre:'Extensión',x:1435,y:742,ico:['extension']},
-    {id:'8',n:'8',nombre:'Cultivos Anuales',temas:['Maíz','Soja'],x:1369,y:733,ico:['cultivos']},
-    {id:'9',n:'9',nombre:'Laboratorio de Suelos',corto:'Lab. de Suelos',area:'Recursos naturales',temas:['Análisis de suelo','Sustratos'],x:1453,y:755,ico:['lab','sustrato']},
-    {id:'wc-a',wc:true,nombre:'Sanitarios',corto:'Sanitarios (posta 4)',ref:'Cerca de la posta 4, Yerba Mate y Té.',x:1528,y:604,ico:['wc']},
+        ['Mejoramiento genético','Selección y evaluación de materiales vegetales para identificar características de interés agronómico y productivo.'],
+        ['Producción y mecanización','Prácticas de manejo del cultivo y uso de equipamiento para mejorar la eficiencia y las condiciones de trabajo, especialmente en la cosecha.'],
+        ['AgTech: monitoreo de cultivos con drones','Presentación breve del trabajo de investigación con drones multiespectrales para adquirir imágenes de lotes de yerba mate, calcular índices de vegetación y analizar la variabilidad dentro del cultivo. Se mostrarán avances en metodologías para aislar el dosel productivo y en aplicaciones desarrolladas con apoyo de inteligencia artificial, orientadas a generar mapas de zonificación y detectar o contabilizar plantas. Estas herramientas buscan aportar información para el monitoreo y la toma de decisiones agronómicas.']
+      ]},
+    {id:'5',n:'5',nombre:'Invernáculos',temas:['Injertos en frutales','Aromáticas'],x:1477,y:681,ico:['invernaculos'],
+      desc:'Se mostrarán experiencias de producción y evaluación de plantas en ambientes protegidos, donde es posible manejar con mayor precisión aspectos como la humedad, la temperatura y el riego. Se hará una demostración de injertos en plantas frutales. Además habrá información sobre plantas aromáticas.'},
+    {id:'6',n:'6',nombre:'Estación agrometeorológica',corto:'Agrometeorología',temas:['Instrumentos convencionales y automáticos','60 años de registros'],x:1445,y:711,ico:['agromet'],
+      desc:'Se conocerán instrumentos convencionales y automáticos que registran variables como precipitaciones, temperatura, humedad, viento y radiación. Estos datos son fundamentales para interpretar las condiciones ambientales y apoyar la planificación de las labores agropecuarias. Con 60 años de registros continuos, es una de las pocas estaciones completas de la región que mide múltiples variables del tiempo de forma ininterrumpida.'},
+    {id:'7',n:'7',nombre:'Extensión',x:1435,y:742,ico:['extension'],
+      desc:'Se compartirán experiencias de trabajo conjunto entre el INTA, productores y comunidades. La extensión facilita el intercambio de conocimientos y la aplicación de soluciones en el territorio, en temas como el manejo de cultivos, la protección de vertientes y las prácticas de producción sostenible.'},
+    {id:'8',n:'8',nombre:'Cultivos anuales: maíz y soja',corto:'Cultivos anuales',temas:['Maíz','Soja'],x:1369,y:733,ico:['cultivos'],
+      desc:'Se presentarán aspectos del manejo y mejoramiento de cultivos anuales como maíz, con énfasis en la adaptación de materiales, el seguimiento del desarrollo de las plantas y las prácticas agronómicas que contribuyen a una producción eficiente.'},
+    {id:'9',n:'9',nombre:'Laboratorio de suelos: análisis de suelo y sustratos',corto:'Lab. de Suelos',area:'Recursos naturales',temas:['Análisis de suelo','Sustratos'],x:1453,y:755,ico:['lab','sustrato'],
+      desc:'Se explicará cómo los análisis de suelo y sustratos permiten conocer propiedades relevantes para la nutrición vegetal y el manejo de los cultivos. La información de laboratorio ayuda a orientar decisiones sobre fertilización, correcciones y calidad de los medios de crecimiento.'},
+    {id:'wc-a',wc:true,nombre:'Sanitarios',corto:'Sanitarios (posta 4)',ref:'Cerca de la posta 4, Yerba mate y té.',x:1528,y:604,ico:['wc']},
     {id:'wc-b',wc:true,nombre:'Sanitarios',corto:'Sanitarios (Edif. Central)',ref:'Junto al Edificio Central, cerca de las postas 7 y 9.',x:1432,y:772,ico:['wc']}
   ];
   var postas=puntos.filter(function(p){return !p.wc});
@@ -278,7 +293,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     b.setAttribute('aria-label',(p.wc?p.corto:'Posta '+p.n+': '+p.nombre));
     b.appendChild(img('img/c_'+p.ico[0]+'.png'));
     if(!p.wc) b.appendChild(el('span','num',p.n));
-    b.addEventListener('click',function(){ if(!movido) elegir(p.id) });
+    b.addEventListener('click',function(){ if(movido)return; elegir(p.id); if(p.desc) abrirHoja(p); });
     lienzo.appendChild(b);p.pin=b;
 
     var c=el('button','chip');c.type='button';c.setAttribute('aria-pressed','false');
@@ -343,7 +358,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     d.appendChild(el('h2','',p.nombre));
     if(p.temas) d.appendChild(el('p','temas',p.temas.join(' · ')));
     if(p.desc){
-      var vm=el('button','vermas','Ver información de la posta');vm.type='button';
+      var vm=el('button','vermas','Ver qué se presenta en esta posta');vm.type='button';
       vm.addEventListener('click',function(){abrirHoja(p)});d.appendChild(vm);
     }
     var nota=el('p','nota');
@@ -385,7 +400,22 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
       p.detalle.forEach(function(x){dl.appendChild(el('dt','',x[0]));dl.appendChild(el('dd','',x[1]))});
       hojaCuerpo.appendChild(dl);
     }
-    vuelveA=document.activeElement;hoja.hidden=false;hojaCuerpo.scrollTop=0;
+    if(p.video){
+      var v=el('a','video');v.href=p.video;v.target='_blank';v.rel='noopener';
+      v.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="currentColor"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg>';
+      v.appendChild(el('span','','Ver video sobre la calicata'));
+      hojaCuerpo.appendChild(v);
+    }
+    hojaCuerpo.appendChild(el('p','orienta','Material orientativo. Las actividades y demostraciones de cada posta pueden ajustarse según la organización del recorrido.'));
+    var nav=el('div','hoja-nav'),i=postas.indexOf(p);
+    [-1,1].forEach(function(dir){
+      var q=postas[(i+dir+postas.length)%postas.length],b=el('button','',dir<0?'‹ Posta '+q.n:'Posta '+q.n+' ›');b.type='button';
+      b.setAttribute('aria-label',(dir<0?'Posta anterior: ':'Posta siguiente: ')+q.nombre);
+      b.addEventListener('click',function(){elegir(q.id);abrirHoja(q)});nav.appendChild(b);
+    });
+    hojaCuerpo.appendChild(nav);
+    if(hoja.hidden) vuelveA=document.activeElement;
+    hoja.hidden=false;hojaCuerpo.scrollTop=0;
     document.getElementById('hojaCerrar').focus();
   }
   function cerrarHoja(){ if(hoja.hidden)return; hoja.hidden=true; if(vuelveA&&vuelveA.focus) vuelveA.focus(); }

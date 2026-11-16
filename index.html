@@ -92,7 +92,12 @@ body{-webkit-touch-callout:none}
 .info button svg{width:18px;height:18px}
 .info-caja{background:var(--papel);border-radius:12px;padding:10px 14px;font-size:13.5px;box-shadow:0 2px 12px rgba(18,35,59,.3);max-width:300px}
 .info-caja p{margin:0}
-.info-caja .credito{margin-top:7px;padding-top:7px;border-top:1px solid var(--linea);color:var(--tinta-suave)}
+.info-caja .credito{margin-top:9px;padding-top:9px;border-top:1px solid var(--linea);color:var(--tinta-suave);display:flex;align-items:center;gap:12px;font-size:12.5px;line-height:1.3}
+.info-caja .credito img{width:96px;height:auto;flex:none}
+/* Firma discreta del autor, abajo a la derecha del mapa */
+.firma{position:absolute;right:12px;bottom:14px;z-index:5;display:block;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.72);box-shadow:0 1px 4px rgba(18,35,59,.18);opacity:.8;transition:opacity .2s}
+.firma:hover,.firma:focus-visible{opacity:1}
+.firma img{display:block;height:20px;width:auto}
 
 /* Hoja de información de la posta */
 .hoja{position:absolute;inset:0;z-index:20;background:rgba(18,35,59,.5);display:flex;align-items:flex-end;justify-content:center}
@@ -187,10 +192,16 @@ body{-webkit-touch-callout:none}
         <span class="rotulo">Edificio Central</span>
       </div>
       <div class="aviso" id="aviso" role="status" hidden></div>
+      <button type="button" class="firma" id="firma" aria-label="Desarrollado por Fernando Alvarenga. Ver créditos">
+        <img src="img/fa.png" alt="" width="31" height="20">
+      </button>
       <div class="info">
         <div class="info-caja" id="infoCaja" hidden>
           <p><strong>Jornada Tranqueras Abiertas</strong><br>EEA Cerro Azul · Ruta Nac. 14, km 836<br>Jueves 19 de noviembre</p>
-          <p class="credito">Desarrollado por Fernando Alvarenga – INTA Cerro Azul</p>
+          <div class="credito">
+            <img src="img/fa_logo.png" alt="Fernando Alvarenga" width="120" height="53">
+            <span>Desarrollado por Fernando Alvarenga<br>INTA Cerro Azul</span>
+          </div>
         </div>
         <button type="button" id="infoBtn" aria-expanded="false" aria-controls="infoCaja">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.2"/></svg>
@@ -515,7 +526,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
   var dedos={},movido=false,ini=null,ultimoToque=0;
   function lista(){return Object.keys(dedos).map(function(i){return dedos[i]})}
   mapa.addEventListener('pointerdown',function(e){
-    if(e.target.closest('.zoom')||e.target.closest('.info'))return;
+    if(e.target.closest('.zoom')||e.target.closest('.info')||e.target.closest('.firma'))return;
     dedos[e.pointerId]={x:e.clientX,y:e.clientY};movido=false;prep();
     lienzo.classList.remove('vuela');
   });
@@ -559,9 +570,11 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
   },{passive:false});
 
   var infoBtn=document.getElementById('infoBtn'),infoCaja=document.getElementById('infoCaja');
-  infoBtn.addEventListener('click',function(){
-    var abre=infoCaja.hidden;infoCaja.hidden=!abre;infoBtn.setAttribute('aria-expanded',abre?'true':'false');
-  });
+  function alternarInfo(abrir){
+    var abre=abrir!=null?abrir:infoCaja.hidden;infoCaja.hidden=!abre;infoBtn.setAttribute('aria-expanded',abre?'true':'false');
+  }
+  infoBtn.addEventListener('click',function(){alternarInfo()});
+  document.getElementById('firma').addEventListener('click',function(){alternarInfo(true)});
 
   function centro(f){var s=tam();zoomEn(s.w/2,s.h/2,f,true)}
   document.getElementById('mas').addEventListener('click',function(){centro(1.5)});

@@ -130,7 +130,7 @@ body{-webkit-touch-callout:none}
 .hoja-cab .icono img + img{margin-left:-14px}
 .hoja-cab .sobre{font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--azul)}
 .hoja-cab h2{margin:2px 0 0;font-family:var(--display);font-weight:700;font-size:27px;line-height:1.02;text-wrap:balance}
-.hoja-cuerpo .intro{margin:14px 0 0;font-size:16px;max-width:65ch}
+.hoja-cuerpo .intro{margin:12px 0 0;font-size:16px;max-width:65ch}
 .hoja-cuerpo dl{margin:14px 0 0;display:flex;flex-direction:column;gap:10px}
 .hoja-cuerpo dt{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.1;color:var(--monte);padding-left:10px;border-left:4px solid var(--monte)}
 .hoja-cuerpo dd{margin:3px 0 0 14px;font-size:15px;color:var(--tinta);max-width:62ch}
@@ -299,7 +299,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     {id:'8',n:'8',nombre:'Cultivos anuales: maíz y soja',corto:'Cultivos anuales',temas:['Maíz','Soja','Roya asiática','Proyecto RAÍCES'],x:1369,y:733,ico:['cultivos'],
       desc:'Conocé las líneas de investigación en mejoramiento genético y evaluación de cultivares de maíz (Bautista INTA), el desarrollo de materiales de soja con resistencia a enfermedades y calidad diferenciada (Doncella INTA-JIRCAS y Misionera INTA-JIRCAS) y estrategias de manejo integrado de la roya asiática. Además, compartiremos las experiencias del Proyecto RAÍCES en conservación de semillas, corredores agroecológicos y mejoramiento genético participativo.'},
     {id:'9',n:'9',nombre:'Laboratorio de suelos: análisis de suelo y sustratos',corto:'Lab. de Suelos',area:'Recursos naturales',temas:['Análisis de suelo','Sustratos'],x:1453,y:755,ico:['lab','sustrato'],
-      desc:'Se explicará cómo los análisis de suelo y sustratos permiten conocer propiedades relevantes para la nutrición vegetal y el manejo de los cultivos. La información de laboratorio ayuda a orientar decisiones sobre fertilización, correcciones y calidad de los medios de crecimiento.'},
+      desc:'Se compartirá información sobre el trabajo que realiza el Laboratorio de Suelos, destacando la importancia de los análisis y las recomendaciones técnicas para mejorar la fertilidad del suelo, optimizar el uso de insumos y promover sistemas productivos más sustentables.\nAdemás, se explicará qué son los sustratos para plantas, cuáles son sus principales funciones y qué propiedades físicas y químicas deben considerarse para su selección y preparación, favoreciendo un adecuado desarrollo de los cultivos.'},
     {id:'wc-a',wc:true,nombre:'Sanitarios',corto:'Sanitarios (posta 4)',ref:'Cerca de la posta 4, Yerba mate y té.',x:1528,y:604,ico:['wc']},
     {id:'wc-b',wc:true,nombre:'Sanitarios',corto:'Sanitarios (Edif. Central)',ref:'Junto al Edificio Central, cerca de las postas 7 y 9.',x:1432,y:772,ico:['wc']}
   ];
@@ -426,7 +426,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     t.appendChild(el('div','sobre','Posta '+p.n+(p.area?' · '+p.area:'')));
     var h=el('h2','',p.nombre);h.id='hojaTitulo';t.appendChild(h);
     cab.appendChild(ic);cab.appendChild(t);hojaCuerpo.appendChild(cab);
-    hojaCuerpo.appendChild(el('p','intro',p.desc));
+    p.desc.split('\n').forEach(function(t){hojaCuerpo.appendChild(el('p','intro',t))});
     if(p.detalle){
       var dl=el('dl','');
       p.detalle.forEach(function(x){dl.appendChild(el('dt','',x[0]));dl.appendChild(el('dd','',x[1]))});

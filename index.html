@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mapa Tranqueras Abiertas</title>
-<meta name="description" content="Mapa interactivo de la Jornada Tranqueras Abiertas en la EEA INTA Cerro Azul. Jueves 19 de noviembre. Encontrá las 9 postas, los sanitarios y tu ubicación.">
+<meta name="description" content="Mapa interactivo de la Jornada Tranqueras Abiertas en la EEA INTA Cerro Azul. Jueves 19 de noviembre. Encontrá las 10 postas, los sanitarios y tu ubicación.">
 <meta name="theme-color" content="#0b5cbf">
 <!-- Vista previa al compartir el link (WhatsApp, Facebook, Telegram, etc.) -->
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_AR">
 <meta property="og:site_name" content="INTA Cerro Azul">
 <meta property="og:title" content="Jornada Tranqueras Abiertas · EEA INTA Cerro Azul">
-<meta property="og:description" content="Jueves 19 de noviembre. Mapa interactivo con las 9 postas del recorrido, sanitarios y tu ubicación en el predio.">
+<meta property="og:description" content="Jueves 19 de noviembre. Mapa interactivo con las 10 postas del recorrido, sanitarios y tu ubicación en el predio.">
 <meta property="og:url" content="https://ferchugit.github.io/tranquerasabiertas/">
 <meta property="og:image" content="https://ferchugit.github.io/tranquerasabiertas/img/compartir.jpg">
 <meta property="og:image:secure_url" content="https://ferchugit.github.io/tranquerasabiertas/img/compartir.jpg">
@@ -140,6 +140,13 @@ body{-webkit-touch-callout:none}
 .hoja-nav{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--linea)}
 .hoja-nav button{min-height:44px;padding:0 16px;border-radius:999px;background:var(--celeste);color:var(--azul-hondo);font-weight:600;font-size:15px}
 .hoja-nav button:active{background:#cfe1f8}
+.pin .hora{position:absolute;left:50%;bottom:-15px;transform:translateX(-50%);background:#c62828;color:#fff;border:1.5px solid #fff;border-radius:7px;
+  font-family:var(--display);font-weight:800;font-size:12px;line-height:1;padding:2px 5px 3px;white-space:nowrap}
+.chip .chip-hora{background:#c62828;color:#fff;border-radius:6px;font-size:12px;font-weight:700;padding:2px 6px;margin-left:2px}
+.chip[aria-pressed="true"] .chip-hora{background:#fff;color:#c62828}
+.ficha .aviso-hora{margin:0 0 2px;font-size:14px;font-weight:700;color:#c62828}
+.hoja-cuerpo .hoja-hora{margin:14px 0 0;padding:9px 12px;border-radius:10px;background:#fdecea;color:#7f1d1d;font-size:15px;width:fit-content;max-width:100%}
+.hoja-cuerpo .hoja-hora strong{color:#c62828}
 .ficha .vermas{display:inline-block;margin:1px 0 3px;color:var(--azul);font-weight:600;font-size:14px;text-decoration:underline;text-underline-offset:2px;text-align:left}
 @media (min-width:860px){ .hoja{align-items:center} .hoja-caja{border-radius:18px} }
 @media (prefers-reduced-motion:reduce){ .hoja-caja{animation:none} }
@@ -273,7 +280,8 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
   var W=2400,H=1697;
   document.addEventListener('contextmenu',function(e){e.preventDefault()});
   document.addEventListener('dragstart',function(e){e.preventDefault()});
-  // Coordenadas en píxeles del croquis (img/mapa.jpg), proyectadas desde ubicacion_georeferenciadas_postas.kml
+  // Coordenadas en píxeles del croquis (img/mapa.jpg), proyectadas desde ubicacion_georeferenciadas_postas.kml y _zoom.kml
+  // (los sanitarios del Edificio Central se corren unos 12 m al oeste para no tapar la posta 10)
   var puntos=[
     // Textos: POSTAS_TRANQUERAS_ABIERTAS_DESCRIPCIONES.docx
     {id:'1',n:'1',nombre:'Jardín de introducción de especies',corto:'Jardín de especies',area:'Producción animal',x:1601,y:678,ico:['jardin'],
@@ -300,8 +308,17 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
       desc:'Conocé las líneas de investigación en mejoramiento genético y evaluación de cultivares de maíz (Bautista INTA), el desarrollo de materiales de soja con resistencia a enfermedades y calidad diferenciada (Doncella INTA-JIRCAS y Misionera INTA-JIRCAS) y estrategias de manejo integrado de la roya asiática. Además, compartiremos las experiencias del Proyecto RAÍCES en conservación de semillas, corredores agroecológicos y mejoramiento genético participativo.'},
     {id:'9',n:'9',nombre:'Laboratorio de suelos: análisis de suelo y sustratos',corto:'Lab. de Suelos',area:'Recursos naturales',temas:['Análisis de suelo','Sustratos'],x:1453,y:755,ico:['lab','sustrato'],
       desc:'Se compartirá información sobre el trabajo que realiza el Laboratorio de Suelos, destacando la importancia de los análisis y las recomendaciones técnicas para mejorar la fertilidad del suelo, optimizar el uso de insumos y promover sistemas productivos más sustentables.\nAdemás, se explicará qué son los sustratos para plantas, cuáles son sus principales funciones y qué propiedades físicas y químicas deben considerarse para su selección y preparación, favoreciendo un adecuado desarrollo de los cultivos.'},
+    {id:'10',n:'10',nombre:'Innovación y tecnologías aplicadas a la producción ganadera',corto:'Ganadería',hora:'Desde las 13 h',
+      temas:['Pasturas megatérmicas','Drones y satélites','Parásitos en ovinos'],x:1436,y:779,ico:['ganaderia'],
+      desc:'Espacio de intercambio técnico con tres charlas breves de 15 minutos, donde se presentarán resultados de experiencias y herramientas aplicadas a la mejora de los sistemas ganaderos.',
+      detalle:[
+        ['1. Productividad de pasturas megatérmicas','Resultados de evaluación de especies forrajeras y su potencial productivo.'],
+        ['2. Drones y satélites aplicados a la ganadería','Uso de tecnologías para evaluar los recursos forrajeros y mejorar la planificación y el manejo ganadero.'],
+        ['3. Control de parásitos en ovinos','Diagnóstico, control y prevención de la generación de resistencia en majadas.']
+      ],
+      duracion:'Duración total: aprox. 45 minutos'},
     {id:'wc-a',wc:true,nombre:'Sanitarios',corto:'Sanitarios (posta 4)',ref:'Cerca de la posta 4, Yerba mate y té.',x:1528,y:604,ico:['wc']},
-    {id:'wc-b',wc:true,nombre:'Sanitarios',corto:'Sanitarios (Edif. Central)',ref:'Junto al Edificio Central, cerca de las postas 7 y 9.',x:1432,y:772,ico:['wc']}
+    {id:'wc-b',wc:true,nombre:'Sanitarios',corto:'Sanitarios (Edif. Central)',ref:'Junto al Edificio Central, cerca de las postas 7, 9 y 10.',x:1413,y:767,ico:['wc']}
   ];
   var postas=puntos.filter(function(p){return !p.wc});
   var banos=puntos.filter(function(p){return p.wc});
@@ -325,6 +342,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     b.setAttribute('aria-label',(p.wc?p.corto:'Posta '+p.n+': '+p.nombre));
     b.appendChild(img('img/c_'+p.ico[0]+'.png'));
     if(!p.wc) b.appendChild(el('span','num',p.n));
+    if(p.hora) b.appendChild(el('span','hora','13 h'));
     b.addEventListener('click',function(){ if(movido)return; elegir(p.id); if(p.desc) abrirHoja(p); });
     lienzo.appendChild(b);p.pin=b;
 
@@ -332,6 +350,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     c.appendChild(img('img/c_'+p.ico[0]+'.png'));
     if(!p.wc) c.appendChild(el('b','',p.n));
     c.appendChild(el('span','',p.corto||p.nombre));
+    if(p.hora) c.appendChild(el('span','chip-hora','13 h'));
     c.addEventListener('click',function(){elegir(p.id)});
     tira.appendChild(c);p.chip=c;
   });
@@ -377,7 +396,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     var ic=el('div','icono'),d=el('div','datos');
     if(!p){
       ic.appendChild(img('img/guia.png','guia'));
-      d.appendChild(el('div','sobre','9 postas para recorrer'));
+      d.appendChild(el('div','sobre',postas.length+' postas para recorrer'));
       d.appendChild(el('h2','','¿A dónde querés ir?'));
       d.appendChild(el('p','nota','Tocá una posta en el mapa o elegila de la lista.'));
       ficha.appendChild(ic);ficha.appendChild(d);
@@ -388,6 +407,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     p.ico.forEach(function(n){ic.appendChild(img('img/p_'+n+'.png'))});
     d.appendChild(el('div','sobre',p.wc?'Servicios':'Posta '+p.n+' de '+postas.length+(p.area?' · '+p.area:'')));
     d.appendChild(el('h2','',p.nombre));
+    if(p.hora) d.appendChild(el('p','aviso-hora','⏰ '+p.hora));
     if(p.temas) d.appendChild(el('p','temas',p.temas.join(' · ')));
     if(p.desc){
       var vm=el('button','vermas','Ver qué se presenta en esta posta');vm.type='button';
@@ -426,6 +446,11 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     t.appendChild(el('div','sobre','Posta '+p.n+(p.area?' · '+p.area:'')));
     var h=el('h2','',p.nombre);h.id='hojaTitulo';t.appendChild(h);
     cab.appendChild(ic);cab.appendChild(t);hojaCuerpo.appendChild(cab);
+    if(p.hora){
+      var hh=el('p','hoja-hora');hh.appendChild(el('strong','','⏰ '+p.hora));
+      if(p.duracion) hh.appendChild(document.createTextNode(' · '+p.duracion));
+      hojaCuerpo.appendChild(hh);
+    }
     p.desc.split('\n').forEach(function(t){hojaCuerpo.appendChild(el('p','intro',t))});
     if(p.detalle){
       var dl=el('dl','');

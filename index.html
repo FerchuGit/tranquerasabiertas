@@ -427,7 +427,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     ficha.textContent='';
     var ic=el('div','icono'+(p&&p.ico&&p.ico.length>2?' tres':'')),d=el('div','datos');
     if(!p){
-      ic.appendChild(img(ruta(lloviendo?'guia_lluvia.png':'guia.png'),'guia'));
+      ic.appendChild(img(ruta(lloviendo?'guia_piloto.png':'guia.png'),'guia'));
       d.appendChild(el('div','sobre',postas.length+' postas para recorrer'));
       d.appendChild(el('h2','','¿A dónde querés ir?'));
       d.appendChild(el('p','nota','Tocá una posta en el mapa o elegila de la lista.'));
@@ -510,7 +510,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
   function abrirLluvia(){
     hojaCuerpo.textContent='';
     var cab=el('div','hoja-cab lluvia'),t=el('div','');
-    cab.appendChild(img(ruta('guia_lluvia.png'),'guia-lluvia'));
+    cab.appendChild(img(ruta('guia_piloto.png'),'guia-lluvia'));
     t.appendChild(el('div','sobre','Jornada Tranqueras Abiertas'));
     var h=el('h2','','No se suspende por lluvia');h.id='hojaTitulo';t.appendChild(h);
     t.appendChild(el('p','intro','La jornada se realiza igual aunque llueva. Si el día está lluvioso, vení con piloto o paraguas y calzado cómodo para caminar por el predio.'));

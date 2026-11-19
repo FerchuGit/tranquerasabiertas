@@ -142,6 +142,7 @@ body{-webkit-touch-callout:none}
 .hoja-cab.lluvia img.guia-lluvia{height:120px;width:auto;flex:none}
 @media (max-width:420px){.hoja-cab.lluvia{flex-direction:column;align-items:flex-start;gap:6px}.hoja-cab.lluvia img.guia-lluvia{height:140px}}
 .hoja-cab.lluvia .intro{margin-top:8px;font-size:15.5px}
+.hoja-cuerpo img.foto-puesto{display:block;width:100%;max-width:420px;height:auto;margin:14px 0 4px;border-radius:12px}
 .hoja-cuerpo .video{display:flex;align-items:center;gap:10px;margin:16px 0 0;padding:10px 14px;min-height:48px;border-radius:12px;background:#fdecec;color:#a3161b;font-weight:600;text-decoration:none;width:fit-content}
 .hoja-cuerpo .video svg{width:28px;height:28px;color:#e02424;flex:none}
 .hoja-cuerpo .orienta{margin:18px 0 0;font-size:12.5px;color:var(--tinta-suave);max-width:62ch}
@@ -312,6 +313,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
   document.addEventListener('contextmenu',function(e){e.preventDefault()});
   document.addEventListener('dragstart',function(e){e.preventDefault()});
   // Coordenadas en píxeles del croquis (img/mapa.jpg), proyectadas desde ubicacion_georeferenciadas_postas.kml y _zoom.kml
+  // (el food truck está en 1442,764 según food_track.kml; el marcador se corre unos 45 m al sureste para no tapar las postas 9 y 10)
   // (los sanitarios del Zoom se corren unos 12 m al oeste para no tapar la posta 10)
   var puntos=[
     // Textos: POSTAS_TRANQUERAS_ABIERTAS_DESCRIPCIONES.docx
@@ -348,12 +350,13 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
         ['3. Control de parásitos en ovinos','Diagnóstico, control y prevención de la generación de resistencia en majadas.']
       ],
       duracion:'Duración total: aprox. 45 minutos'},
+    {id:'comida',wc:true,tipo:'comida',nombre:'Servicio de comida',corto:'Comidas (food truck)',ref:'Puesto de comidas y frutas de la jornada.',foto:'foto_comida.jpg',x:1458,y:784,ico:['comida']},
     {id:'wc-a',wc:true,nombre:'Sanitarios',corto:'Sanitarios (posta 4)',ref:'Cerca de la posta 4, Yerba mate y té.',x:1528,y:604,ico:['wc']},
     {id:'wc-b',wc:true,nombre:'Sanitarios',corto:'Sanitarios (Zoom)',ref:'Junto al Zoom de acreditación, cerca de las postas 7, 9 y 10.',x:1413,y:767,ico:['wc']}
   ];
   var lloviendo=false;
   var postas=puntos.filter(function(p){return !p.wc});
-  var banos=puntos.filter(function(p){return p.wc});
+  var banos=puntos.filter(function(p){return p.wc&&!p.tipo});
 
   var mapa=document.getElementById('mapa'), lienzo=document.getElementById('lienzo'),
       ficha=document.getElementById('ficha'), tira=document.getElementById('tira'), aviso=document.getElementById('aviso');
@@ -375,7 +378,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     b.appendChild(img(ruta('c_'+p.ico[0]+'.png')));
     if(!p.wc) b.appendChild(el('span','num',p.n));
     if(p.hora) b.appendChild(el('span','hora','13 h'));
-    b.addEventListener('click',function(){ if(movido)return; elegir(p.id); if(p.desc) abrirHoja(p); });
+    b.addEventListener('click',function(){ if(movido)return; elegir(p.id); if(p.desc) abrirHoja(p); else if(p.foto) abrirFoto(p); });
     lienzo.appendChild(b);p.pin=b;
 
     var c=el('button','chip');c.type='button';c.setAttribute('aria-pressed','false');
@@ -453,6 +456,10 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
       lk.type='button';lk.addEventListener('click',function(){elegir(w.id)});nota.appendChild(lk);
     }
     d.appendChild(nota);
+    if(p.foto){
+      var vf=el('button','vermas','Ver foto del puesto');vf.type='button';
+      vf.addEventListener('click',function(){abrirFoto(p)});d.appendChild(vf);
+    }
     d.appendChild(el('p','nota dist'));
     ficha.appendChild(ic);ficha.appendChild(d);
     var pasos=el('div','pasos');
@@ -521,6 +528,18 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
     hoja.hidden=false;hojaCuerpo.scrollTop=0;document.getElementById('hojaCerrar').focus();
   }
   document.getElementById('noSuspende').addEventListener('click',abrirLluvia);
+  function abrirFoto(p){
+    hojaCuerpo.textContent='';
+    var cab=el('div','hoja-cab'),ic=el('div','icono'),t=el('div','');
+    ic.appendChild(img(ruta('p_'+p.ico[0]+'.png')));
+    t.appendChild(el('div','sobre','Servicios'));
+    var h=el('h2','',p.nombre);h.id='hojaTitulo';t.appendChild(h);
+    cab.appendChild(ic);cab.appendChild(t);hojaCuerpo.appendChild(cab);
+    hojaCuerpo.appendChild(el('p','intro',p.ref));
+    var f=img(ruta(p.foto),'foto-puesto');f.alt='Foto del puesto de comidas';hojaCuerpo.appendChild(f);
+    if(hoja.hidden) vuelveA=document.activeElement;
+    hoja.hidden=false;hojaCuerpo.scrollTop=0;document.getElementById('hojaCerrar').focus();
+  }
   function cerrarHoja(){ if(hoja.hidden)return; hoja.hidden=true; if(vuelveA&&vuelveA.focus) vuelveA.focus(); }
   document.getElementById('hojaCerrar').addEventListener('click',cerrarHoja);
   hoja.addEventListener('click',function(e){ if(e.target===hoja) cerrarHoja() });

@@ -683,7 +683,7 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
   var antes=tam();
   // ---------- Clima en vivo (Open-Meteo, sin clave) ----------
   // Si llueve en la EEA se muestra lluvia animada sobre el mapa; con buen tiempo no cambia nada.
-  // Para probar: agregar #lluvia, #tormenta o #sol al final del link.
+  // Para probar: agregar ?prueba=lluvia o ?prueba=tormenta al final del link.
   (function(){
     var LAT=-27.656,LON=-55.437,cada=10*60*1000;
     var tela=document.getElementById('climaLluvia'),tinte=document.getElementById('climaTinte'),chip=document.getElementById('climaChip');
@@ -724,23 +724,25 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
       if(!tela.hidden){medir();cuadro()}
       relampagos();
     }
+    // Solo hay efecto si el código del tiempo es de lluvia Y además hay precipitación medida en este momento.
     function leer(c){
-      var w=c.weather_code,p=c.precipitation||0;
+      var w=c.weather_code,p=Math.max(c.precipitation||0,(c.rain||0)+(c.showers||0));
+      var codigoLluvia=(w>=51&&w<=67)||(w>=80&&w<=82)||w>=95;
+      if(!codigoLluvia||p<0.1)return ['sol',0];
       if(w>=95)return ['tormenta',1.6];
-      if((w>=51&&w<=57)||w===61||w===80)return ['lluvia',p>=1?1:.5];
-      if(w===63||w===66||w===81)return ['lluvia',1];
-      if(w===65||w===67||w===82)return ['lluvia',1.5];
-      if(p>=.2)return ['lluvia',.7];
-      return ['sol',0];
+      if(w===65||w===67||w===82||p>=4)return ['lluvia',1.5];
+      if(w===63||w===66||w===81||p>=1)return ['lluvia',1];
+      return ['lluvia',.5];
     }
     function consultar(){
-      var forzado=(location.hash||'').replace('#','')||(location.search.match(/[?&]clima=([a-z]+)/)||[])[1];
+      // Prueba manual solo con ?prueba=lluvia o ?prueba=tormenta (los #lluvia de antes ya no hacen nada)
+      var forzado=(location.search.match(/[?&]prueba=([a-z]+)/)||[])[1];
       if(forzado==='lluvia'){aplicar('lluvia',1);return}
       if(forzado==='tormenta'){aplicar('tormenta',1.6);return}
       if(forzado==='sol'){aplicar('sol');return}
       if(!window.fetch)return;
       var ctrl=window.AbortController?new AbortController():null,t=setTimeout(function(){ctrl&&ctrl.abort()},8000);
-      fetch('https://api.open-meteo.com/v1/forecast?latitude='+LAT+'&longitude='+LON+'&current=weather_code,precipitation&timezone=America%2FArgentina%2FBuenos_Aires',ctrl?{signal:ctrl.signal}:{})
+      fetch('https://api.open-meteo.com/v1/forecast?latitude='+LAT+'&longitude='+LON+'&current=weather_code,precipitation,rain,showers&timezone=America%2FArgentina%2FBuenos_Aires',ctrl?{signal:ctrl.signal}:{})
         .then(function(r){return r.ok?r.json():null})
         .then(function(d){clearTimeout(t);if(d&&d.current){var e=leer(d.current);if(e[0]!==estado||e[1]!==intensidad)aplicar(e[0],e[1])}})
         .catch(function(){clearTimeout(t)}); // sin conexión o bloqueado: el mapa queda como está
@@ -749,7 +751,6 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
       if(document.hidden)parar();else{consultar();if(!tela.hidden&&!anim)cuadro()}
     });
     chip.addEventListener('click',abrirLluvia);
-    window.addEventListener('hashchange',consultar);
     window.addEventListener('resize',function(){if(!tela.hidden)medir()});
     consultar();setInterval(consultar,cada);
   })();

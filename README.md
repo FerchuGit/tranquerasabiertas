@@ -2,8 +2,8 @@
 
 Mapa interactivo de la jornada Tranqueras Abiertas en la EEA Cerro Azul (INTA), Ruta Nac. 14, km 836.
 
-- `index.html`: la página del mapa (postas, sanitarios, zoom y ubicación por GPS).
-- `img/`: croquis del predio, detalle de la zona de actividades e íconos.
+- `index.html`: página de cierre ("¡Jornada finalizada con éxito!"). El mapa interactivo de la jornada quedó en el historial del repositorio.
+- `img/`: imágenes que usa la página de cierre.
 
 Para publicarlo: Settings → Pages → Deploy from a branch → `main` / `(root)`.
 

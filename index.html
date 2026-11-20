@@ -169,6 +169,21 @@ body{-webkit-touch-callout:none}
 .clima-chip{position:absolute;text-align:left;cursor:pointer;left:12px;top:12px;z-index:5;display:flex;align-items:center;gap:6px;padding:6px 12px 6px 9px;border-radius:999px;background:rgba(18,35,59,.82);color:#fff;font-size:13.5px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.25);max-width:calc(100% - 84px)}
 .clima-chip svg{width:18px;height:18px;flex:none}
 
+/* Cierre de la jornada: cartel y lluvia de papelitos */
+.fin{position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(8,40,90,.55)}
+.fin[hidden]{display:none}
+.fin-caja{position:relative;background:var(--papel);border-radius:20px;max-width:380px;width:100%;padding:22px 22px 20px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.35);animation:finEntra .55s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes finEntra{from{transform:scale(.85) translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.fin-logo{width:64px;height:64px;padding:6px;border-radius:12px;background:var(--azul);display:block;margin:0 auto 10px}
+.fin-eyebrow{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--azul)}
+.fin-caja h2{margin:6px 0 8px;font-family:var(--display);font-weight:800;font-size:31px;line-height:1.02;color:var(--azul-hondo);text-wrap:balance}
+.fin-texto{margin:0 auto;max-width:32ch;font-size:15.5px;color:var(--tinta)}
+.fin-guia{display:block;height:112px;width:auto;margin:12px auto 4px}
+.fin-btn{min-height:48px;padding:0 22px;border-radius:999px;background:var(--azul);color:#fff;font-weight:600;font-size:16px;box-shadow:0 4px 12px rgba(11,92,191,.35)}
+.fin-btn:active{background:var(--azul-hondo)}
+.papelitos{position:absolute;inset:0;width:100%;height:100%;z-index:41;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.fin-caja{animation:none}}
+
 /* Panel */
 .panel{background:var(--papel);border-top:1px solid var(--linea);box-shadow:0 -6px 18px rgba(18,35,59,.12);z-index:6;padding-bottom:env(safe-area-inset-bottom,0)}
 .ficha{display:flex;align-items:center;gap:12px;padding:10px 16px 8px;min-height:96px}
@@ -228,7 +243,7 @@ body{-webkit-touch-callout:none}
       <h1>Tranqueras Abiertas</h1>
       <div class="lugar-fila">
         <p class="lugar">EEA Cerro Azul · Ruta Nac. 14, km 836</p>
-        <button type="button" class="no-suspende" id="noSuspende">
+        <button type="button" class="no-suspende" id="noSuspende" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 18 0z"/><path d="M12 12v6a2 2 0 0 1-4 0"/><path d="M12 3v0"/></svg>
           No se suspende por lluvia
         </button>
@@ -283,6 +298,18 @@ body{-webkit-touch-callout:none}
       <div class="ficha" id="ficha" aria-live="polite"></div>
       <div class="tira" id="tira"></div>
     </section>
+  </div>
+
+  <canvas class="papelitos" id="papelitos" aria-hidden="true"></canvas>
+  <div class="fin" id="fin" role="dialog" aria-modal="true" aria-labelledby="finTitulo">
+    <div class="fin-caja">
+      <img class="fin-logo" src="img/inta.png" alt="INTA" width="64" height="64">
+      <p class="fin-eyebrow">Jornada Tranqueras Abiertas · EEA Cerro Azul</p>
+      <h2 id="finTitulo">¡Jornada finalizada con éxito!</h2>
+      <p class="fin-texto">Gracias a todos los que nos acompañaron el jueves 19 de noviembre. ¡Nos vemos en la próxima!</p>
+      <img class="fin-guia" src="img/guia.png" alt="" width="150" height="148">
+      <button type="button" class="fin-btn" id="finCerrar">Ver el mapa de la jornada</button>
+    </div>
   </div>
 
   <div class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hojaTitulo" hidden>
@@ -697,6 +724,46 @@ window.MAPA_GEO = window.MAPA_GEO || { puntos: [{"lat": -27.6452418, "lon": -55.
 
   // Estado inicial: la zona de actividades encuadrada
   mostrarFicha(null);
+
+  // ---------- Cierre: cartel de jornada finalizada con lluvia de papelitos ----------
+  (function(){
+    var fin=document.getElementById('fin'),btn=document.getElementById('finCerrar'),tela=document.getElementById('papelitos');
+    var ctx=tela.getContext&&tela.getContext('2d'),piezas=[],anim=null,t0=0,DUR=6500;
+    var colores=['#0b5cbf','#083c85','#ffffff','#f9c933','#2e7d32','#7cc04a','#c62828','#5ec8e5'];
+    function cerrar(){fin.hidden=true;parar()}
+    btn.addEventListener('click',cerrar);
+    fin.addEventListener('click',function(e){if(e.target===fin)cerrar()});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!fin.hidden)cerrar()});
+    if(!ctx||window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+    function medir(){
+      var r=tela.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
+      tela.width=Math.round(r.width*dpr);tela.height=Math.round(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);return r;
+    }
+    var r=medir(),n=Math.round(Math.min(220,r.width*r.height/2600));
+    for(var i=0;i<n;i++)piezas.push({
+      x:Math.random()*r.width,y:-20-Math.random()*r.height*.9,w:6+Math.random()*7,h:9+Math.random()*9,
+      vy:1.6+Math.random()*2.4,vx:-1+Math.random()*2,rot:Math.random()*6.28,vr:-.15+Math.random()*.3,
+      osc:Math.random()*6.28,c:colores[i%colores.length],circ:Math.random()<.25
+    });
+    function cuadro(t){
+      if(!t0)t0=t;var pas=t-t0,r=tela.getBoundingClientRect();
+      ctx.clearRect(0,0,r.width,r.height);
+      var alfa=pas>DUR-1200?Math.max(0,(DUR-pas)/1200):1;
+      for(var i=0;i<piezas.length;i++){
+        var p=piezas[i];p.osc+=.05;p.x+=p.vx+Math.sin(p.osc)*.8;p.y+=p.vy;p.rot+=p.vr;
+        if(p.y>r.height+20&&pas<DUR-2000){p.y=-20;p.x=Math.random()*r.width}
+        ctx.save();ctx.globalAlpha=alfa;ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.c;
+        if(p.c==='#ffffff'){ctx.strokeStyle='rgba(8,60,133,.35)';ctx.lineWidth=1}
+        if(p.circ){ctx.beginPath();ctx.arc(0,0,p.w/2,0,6.28);ctx.fill()}
+        else{ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.osc)));if(p.c==='#ffffff')ctx.strokeRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.osc)))}
+        ctx.restore();
+      }
+      if(pas<DUR)anim=requestAnimationFrame(cuadro);else parar();
+    }
+    function parar(){if(anim){cancelAnimationFrame(anim);anim=null}if(ctx){var r=tela.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height)}}
+    window.addEventListener('resize',function(){if(anim)medir()});
+    anim=requestAnimationFrame(cuadro);
+  })();
   function inicio(){ encuadrar(puntos,60,1.6); lienzo.classList.remove('vuela'); }
   inicio();
   var antes=tam();

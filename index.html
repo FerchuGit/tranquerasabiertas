@@ -51,7 +51,12 @@ h1{margin:6px 0 8px;font-family:var(--display);font-weight:800;font-size:31px;li
 .fin-texto{margin:0 auto;max-width:32ch;font-size:15.5px}
 .fin-guia{display:block;height:140px;width:auto;margin:14px auto 0}
 .firma{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--linea);font-size:11.5px;color:var(--tinta-suave)}
-.firma img{height:20px;width:auto}
+.firma .fa{position:relative;display:inline-flex;padding:4px 6px;border-radius:6px;cursor:default;outline:none}
+.firma .fa img{height:20px;width:auto;display:block}
+.fa-nombre{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%) translateY(4px);white-space:nowrap;background:var(--tinta);color:#fff;font-size:12px;font-weight:600;padding:4px 9px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s}
+.fa-nombre::after{content:"";position:absolute;top:100%;left:50%;margin-left:-5px;border:5px solid transparent;border-top-color:var(--tinta)}
+.firma .fa:hover .fa-nombre,.firma .fa:focus .fa-nombre,.firma .fa:active .fa-nombre{opacity:1;transform:translateX(-50%)}
+.firma .fa:focus-visible{box-shadow:0 0 0 2px var(--azul)}
 .papelitos{position:fixed;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.fin-caja{animation:none}}
 </style>
@@ -66,7 +71,7 @@ h1{margin:6px 0 8px;font-family:var(--display);font-weight:800;font-size:31px;li
     <h1>¡Jornada finalizada con éxito!</h1>
     <p class="fin-texto">Gracias a todos los que nos acompañaron el jueves 19 de noviembre. ¡Nos vemos en la próxima!</p>
     <img class="fin-guia" src="img/guia.png" alt="" width="150" height="148">
-    <div class="firma"><img src="img/fa.png" alt="" width="31" height="20"><span>Desarrollado por Fernando Alvarenga – INTA Cerro Azul</span></div>
+    <div class="firma"><span class="fa" tabindex="0" title="Fernando Alvarenga" aria-label="Fernando Alvarenga"><img src="img/fa.png" alt="" width="31" height="20"><span class="fa-nombre" role="tooltip">Fernando Alvarenga</span></span></div>
   </div>
 </main>
 <canvas class="papelitos" id="papelitos" aria-hidden="true"></canvas>
